@@ -1,11 +1,60 @@
+# Project variables
+APP_NAME := {.ModuleName}
+BIN_DIR := bin
+MAIN_FILE := ./cmd/main.go
+PKG := ./...
+
+# Go parameters
+GO ?= go
+LINTER := golangci-lint
+
+.PHONY: all run build clean lint test tidy deps help
+
+all: build
+
+## Run the application
 run:
-	go run ./cmd/server/main.go
+	@echo ">> Running $(APP_NAME)..."
+	@$(GO) run $(MAIN_FILE)
 
+## Build the binary
 build:
-	go build -o bin/server ./cmd/server/main.go
+	@echo ">> Building binary..."
+	@mkdir -p $(BIN_DIR)
+	@$(GO) build -o $(BIN_DIR)/$(APP_NAME) $(MAIN_FILE)
+	@echo "✅ Build complete: $(BIN_DIR)/$(APP_NAME)"
 
+## Clean build artifacts
+clean:
+	@echo ">> Cleaning..."
+	@rm -rf $(BIN_DIR)
+	@$(GO) clean
+	@echo "🧹 Clean complete"
+
+## Lint the codebase
 lint:
-	golangci-lint run ./...
+	@echo ">> Running linter..."
+	@$(LINTER) run $(PKG)
 
+## Run unit tests with coverage
 test:
-	go test ./...
+	@echo ">> Running tests..."
+	@$(GO) test -v -cover $(PKG)
+
+## Format and tidy modules
+tidy:
+	@echo ">> Tidying up..."
+	@$(GO) fmt $(PKG)
+	@$(GO) mod tidy
+
+## Install dependencies
+deps:
+	@echo ">> Installing dependencies..."
+	@$(GO) mod download
+
+## Help menu
+help:
+	@echo ""
+	@echo "Available targets:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[32m%-12s\033[0m %s\n", $$1, $$2}'
+	@echo ""

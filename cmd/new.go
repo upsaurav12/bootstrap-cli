@@ -45,6 +45,7 @@ var newCmd = &cobra.Command{
 var projectType string
 var projectPort string
 var projectRouter string
+var DBType string
 
 func init() {
 	// Add the new command to the rootCmd
@@ -54,6 +55,7 @@ func init() {
 	newCmd.Flags().StringVar(&projectType, "type", "", "type of the project")
 	newCmd.Flags().StringVar(&projectPort, "port", "", "port of the project")
 	newCmd.Flags().StringVar(&projectRouter, "router", "", "router of the project")
+	newCmd.Flags().StringVar(&DBType, "db", "", "data type of the project")
 }
 
 func createNewProject(projectName string, projectRouter string, template string, out io.Writer) {
@@ -73,6 +75,7 @@ func createNewProject(projectName string, projectRouter string, template string,
 	renderTemplateDir("rest"+"/"+projectRouter, projectName, TemplateData{
 		ModuleName: projectName,
 		PortName:   projectPort,
+		DBType:     DBType,
 	})
 
 	if err != nil {
@@ -80,12 +83,29 @@ func createNewProject(projectName string, projectRouter string, template string,
 		return
 	}
 
-	fmt.Fprintf(out, "Created '%s' successfully\n", projectName)
+	if DBType != "" {
+		dbTemplatePath := "db/" + DBType
+		err := renderTemplateDir(dbTemplatePath, filepath.Join(projectName, "internal", "db"), TemplateData{
+			ModuleName: projectName,
+			PortName:   projectPort,
+			DBType:     DBType,
+		})
+		if err != nil {
+
+			fmt.Fprintf(out, "Error rendering  DB templates: %v\n", err)
+			return
+		}
+
+		fmt.Fprintf(out, "✓ Added database support for '%s'\n", DBType)
+	}
+
+	fmt.Fprintf(out, "✓ Created '%s' successfully\n", projectName)
 }
 
 type TemplateData struct {
 	ModuleName string
 	PortName   string
+	DBType     string
 }
 
 func renderTemplateDir(templatePath, destinationPath string, data TemplateData) error {

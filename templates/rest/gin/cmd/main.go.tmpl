@@ -2,25 +2,35 @@ package main
 
 import (
 	"log"
-	"{{ .ModuleName }}/internal/router"
-	"{{ .ModuleName }}/internal/config"
+
+	"{{.ModuleName}}/internal/config"
+	"{{.ModuleName}}/internal/router"
 
 	"github.com/gin-gonic/gin"
+
+	{{- if .DBType }}
+	"{{.ModuleName}}/internal/db"
+	{{- end }}
 )
 
 func main() {
-	// Load config
 	cfg := config.New()
 
-	// Setup Gin
-	r := gin.Default()
+	{{- if .DBType }}
+	db.Connect()
+	defer db.Close()
+	{{- end }}
 
-	// Register routes
+	r := gin.Default()
 	router.RegisterRoutes(r)
 
-	// Start server
-	log.Printf("Server starting on port %s...", cfg.Port)
-	if err := r.Run(":" + cfg.Port); err != nil {
+	port := cfg.Port
+	if port == "" {
+		port = "{{.PortName}}"
+	}
+
+	log.Printf("🚀 starting server on :%s", port)
+	if err := r.Run(":" + port); err != nil {
 		log.Fatal(err)
 	}
 }
