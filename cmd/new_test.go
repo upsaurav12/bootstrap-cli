@@ -30,7 +30,7 @@ func TestCreateNewProject_Success(t *testing.T) {
 	assert.NoError(t, err, "Expected project directory to be created")
 
 	// Check output
-	expected := fmt.Sprintf("Created '%s' successfully\n", projectName)
+	expected := fmt.Sprintf("✓ Created '%s' successfully\n", projectName)
 	fmt.Println(out.String())
 	assert.Equal(t, expected, out.String(), "Unexpected output")
 }
