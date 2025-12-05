@@ -169,6 +169,11 @@ func createNewProject(projectName, projectRouter, template string, out io.Writer
 	frameworkConfig := framework.FrameworkRegistory[projectRouter]
 	var dbConfig *addons.DbAddOneConfig
 
+	jobs := []TemplateJob{
+		{"common", projectName},
+		{"rest/clean", projectName},
+	}
+
 	if DBType != "" {
 		cfg := addons.DbRegistory[DBType]
 		dbConfig = &cfg
@@ -189,10 +194,20 @@ func createNewProject(projectName, projectRouter, template string, out io.Writer
 	renderTemplateDir("rest/clean", projectName, data)
 
 	if DBType != "" {
-		renderTemplateDir("db/"+DBType, projectName, data)
-		renderTemplateDir("db/database", filepath.Join(projectName, "internal/db"), data)
+		jobs = append(jobs,
+			TemplateJob{"db/" + DBType, projectName},
+			TemplateJob{"db/database", filepath.Join(projectName, "internal", "db")},
+		)
 
-		fmt.Fprintf(out, "✓ Added database support for '%s'\n", DBType)
+		// fmt.Fprintf(out, "✓ Added database support for '%s'\n", DBType)
+	}
+
+	for _, job := range jobs {
+		if err := renderTemplateDir(job.TemplateDir, job.DestDir, data); err != nil {
+			fmt.Fprintf(out, "Error rendering template %s → %s: %v\n",
+				job.TemplateDir, job.DestDir, err)
+			return
+		}
 	}
 
 	fmt.Fprintf(out, "✓ Created '%s' successfully\n", projectName)

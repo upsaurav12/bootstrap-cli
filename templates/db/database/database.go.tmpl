@@ -39,7 +39,7 @@ func New() Service {
 		return dbInstance
 	}
 
-	connStr := fmt.Sprintf("{{.DSN}}", username, password, host, port, database, schema)
+	connStr := fmt.Sprintf("{{.DSN}}", username, password, host, port, database)
 
 	db, err := sql.Open("{{.Driver}}", connStr)
 	if err != nil {
