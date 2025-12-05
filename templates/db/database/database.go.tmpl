@@ -1,0 +1,80 @@
+package database
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"time"
+
+	{{.Import}}
+	_ "github.com/joho/godotenv/autoload"
+)
+
+// Service represents a service that interacts with a database.
+type Service interface {
+	Health() map[string]string
+	Close() error
+}
+
+type service struct {
+	db *sql.DB
+}
+
+var (
+	database = os.Getenv("BLUEPRINT_DB_DATABASE")
+	password = os.Getenv("BLUEPRINT_DB_PASSWORD") 
+	username = os.Getenv("BLUEPRINT_DB_USERNAME") 
+	port = os.Getenv("BLUEPRINT_DB_PORT") 
+	host = os.Getenv("BLUEPRINT_DB_HOST") 
+	schema = os.Getenv("BLUEPRINT_DB_SCHEMA") 
+	dbInstance *service
+)
+
+
+func New() Service {
+	if dbInstance != nil {
+		return dbInstance
+	}
+
+	connStr := fmt.Sprintf("{{.DSN}}", username, password, host, port, database, schema)
+
+	db, err := sql.Open("{{.Driver}}", connStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbInstance = &service{db: db}
+	return dbInstance
+}
+
+func (s *service) Health() map[string]string {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	stats := make(map[string]string)
+
+	err := s.db.PingContext(ctx)
+	if err != nil {
+		stats["status"] = "down"
+		stats["error"] = fmt.Sprintf("db down: %v", err)
+		return stats
+	}
+
+	stats["status"] = "up"
+	stats["message"] = "healthy"
+
+	dbStats := s.db.Stats()
+	stats["open_connections"] = strconv.Itoa(dbStats.OpenConnections)
+	stats["in_use"] = strconv.Itoa(dbStats.InUse)
+	stats["idle"] = strconv.Itoa(dbStats.Idle)
+
+	return stats
+}
+
+func (s *service) Close() error {
+	log.Printf("Disconnected from {{.DBName}} database: %s", database)
+	return s.db.Close()
+}

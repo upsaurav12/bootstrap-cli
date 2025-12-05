@@ -14,8 +14,11 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"github.com/spf13/cobra"
+	"github.com/upsaurav12/bootstrap/pkg/addons"
+	"github.com/upsaurav12/bootstrap/pkg/framework"
 	"github.com/upsaurav12/bootstrap/templates"
 )
 
@@ -46,6 +49,42 @@ var projectType string
 var projectPort string
 var projectRouter string
 var DBType string
+var YAMLPath string
+var Entitys string
+
+type TemplateData struct {
+	ModuleName    string
+	PortName      string
+	DBType        string
+	Imports       string
+	Start         string
+	Entity        string
+	ContextName   string
+	ContextType   string
+	Router        string
+	Bind          string
+	JSON          string
+	LowerEntity   string
+	OtherImports  string
+	ApiGroup      func(entity string, get string, lowerentity string) string
+	Get           string
+	FullContext   string
+	ToTheClient   string
+	Response      string
+	ImportHandler string
+	ImportRouter  string
+	ServiceName   string
+	Image         string
+	Environment   string
+	Port          string
+	Volume        string
+	VolumeName    string
+	DBName        string
+	DBEnvPrefix   string
+	Import        string
+	Driver        string
+	DSN           string
+}
 
 func init() {
 	// Add the new command to the rootCmd
@@ -56,6 +95,8 @@ func init() {
 	newCmd.Flags().StringVar(&projectPort, "port", "", "port of the project")
 	newCmd.Flags().StringVar(&projectRouter, "router", "", "router of the project")
 	newCmd.Flags().StringVar(&DBType, "db", "", "data type of the project")
+	newCmd.Flags().StringVar(&YAMLPath, "yaml", "", "yaml file path")
+	newCmd.Flags().StringVar(&Entitys, "entity", "", "entity")
 }
 
 func createNewProject(projectName string, projectRouter string, template string, out io.Writer) {
@@ -64,7 +105,8 @@ func createNewProject(projectName string, projectRouter string, template string,
 		fmt.Fprintf(out, "Error creating directory: %v\n", err)
 		return
 	}
-	// Print the template that was passed
+
+	os.MkdirAll(filepath.Join(projectName, "internal"), 0755)
 
 	// Always add README + Makefile from common
 	renderTemplateDir("common", projectName, TemplateData{
@@ -72,10 +114,37 @@ func createNewProject(projectName string, projectRouter string, template string,
 		PortName:   projectPort,
 	})
 
-	renderTemplateDir("rest"+"/"+projectRouter, projectName, TemplateData{
-		ModuleName: projectName,
-		PortName:   projectPort,
-		DBType:     DBType,
+	var uppercase string
+	if len(Entitys) > 0 {
+		runes := []rune(Entitys)
+		runes[0] = unicode.ToUpper(runes[0])
+
+		uppercase = string(runes)
+	}
+
+	frameworkConfig := framework.FrameworkRegistory[projectRouter]
+
+	renderTemplateDir("rest/clean", projectName, TemplateData{
+		ModuleName:    projectName,
+		PortName:      projectPort,
+		DBType:        DBType,
+		Imports:       frameworkConfig.Imports,
+		Start:         frameworkConfig.Start,
+		ContextName:   frameworkConfig.ContextName,
+		ContextType:   frameworkConfig.ContextType,
+		Entity:        uppercase,
+		Router:        frameworkConfig.Router,
+		Bind:          frameworkConfig.Bind,
+		JSON:          frameworkConfig.JSON,
+		LowerEntity:   Entitys,
+		OtherImports:  frameworkConfig.OtherImports,
+		ApiGroup:      frameworkConfig.ApiGroup,
+		Get:           frameworkConfig.Get,
+		FullContext:   frameworkConfig.FullContext,
+		ToTheClient:   frameworkConfig.ToTheClient,
+		Response:      frameworkConfig.Response,
+		ImportHandler: frameworkConfig.ImportHandler,
+		ImportRouter:  frameworkConfig.ImportRouter,
 	})
 
 	if err != nil {
@@ -84,11 +153,30 @@ func createNewProject(projectName string, projectRouter string, template string,
 	}
 
 	if DBType != "" {
+		dbConfig := addons.DbRegistory[DBType]
+
 		dbTemplatePath := "db/" + DBType
-		err := renderTemplateDir(dbTemplatePath, filepath.Join(projectName, "internal", "db"), TemplateData{
+
+		err := renderTemplateDir(dbTemplatePath, filepath.Join(projectName), TemplateData{
 			ModuleName: projectName,
 			PortName:   projectPort,
 			DBType:     DBType,
+		})
+		err = renderTemplateDir("db/database", filepath.Join(projectName, "internal", "db"), TemplateData{
+			ModuleName:  projectName,
+			PortName:    projectPort,
+			DBType:      DBType,
+			ServiceName: dbConfig.ServiceName,
+			DBName:      dbConfig.DBName,
+			DBEnvPrefix: dbConfig.DBEnvPrefix,
+			Port:        dbConfig.Port,
+			DSN:         dbConfig.DSN,
+			Driver:      dbConfig.Driver,
+			Import:      dbConfig.Import,
+			Image:       dbConfig.Image,
+			Environment: dbConfig.Environment,
+			Volume:      dbConfig.Volume,
+			VolumeName:  dbConfig.VolumeName,
 		})
 		if err != nil {
 
@@ -102,10 +190,10 @@ func createNewProject(projectName string, projectRouter string, template string,
 	fmt.Fprintf(out, "✓ Created '%s' successfully\n", projectName)
 }
 
-type TemplateData struct {
-	ModuleName string
-	PortName   string
-	DBType     string
+func IsHidden(path string) (bool, error) {
+	// Unix hidden check
+	name := filepath.Base(path)
+	return strings.HasPrefix(name, "."), nil
 }
 
 func renderTemplateDir(templatePath, destinationPath string, data TemplateData) error {
@@ -114,19 +202,34 @@ func renderTemplateDir(templatePath, destinationPath string, data TemplateData) 
 			return err
 		}
 
-		// Compute relative path (remove the base templatePath)
 		relPath, _ := filepath.Rel(templatePath, path)
-		targetPath := filepath.Join(destinationPath, strings.TrimSuffix(relPath, ".tmpl"))
 
 		if d.IsDir() {
-			return os.MkdirAll(targetPath, 0755)
+			return os.MkdirAll(filepath.Join(destinationPath, relPath), 0755)
 		}
 
-		// ✅ Important: use full `path` for ReadFile
+		// Read template file
 		content, err := templates.FS.ReadFile(path)
 		if err != nil {
 			return err
 		}
+
+		// Compute dynamic output filename
+		fileName := strings.TrimSuffix(relPath, ".tmpl")
+
+		if templatePath == "common" {
+			base := filepath.Base(fileName)
+			if base == "env" || base == "golang-ci.yml" {
+				fileName = "." + fileName
+			}
+		}
+		// fmt.Println("patg: ", path)
+
+		// 🔥 dynamic entity replacement
+		fileName = strings.ReplaceAll(fileName, "example", strings.ToLower(data.Entity))
+		// fileName = strings.ReplaceAll(fileName, "Example", upperFirst(data.Entity))
+
+		targetPath := filepath.Join(destinationPath, fileName)
 
 		// Parse template
 		tmpl, err := template.New(filepath.Base(path)).Parse(string(content))
@@ -134,8 +237,9 @@ func renderTemplateDir(templatePath, destinationPath string, data TemplateData) 
 			return err
 		}
 
-		// Write file
+		// Write output file
 		outFile, err := os.Create(targetPath)
+		// fmt.Println("targetPath : ", targetPath, data)
 		if err != nil {
 			return err
 		}

@@ -1,0 +1,13 @@
+
+layers:
+  - domain
+  - repository
+  - service
+  - http
+  - config
+
+features:
+  - jwt
+  - redis-cache
+  - metrics
+  - tracing

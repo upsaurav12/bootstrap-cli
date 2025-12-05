@@ -1,0 +1,28 @@
+package router
+
+import (
+	"{{.ModuleName}}/internal/handler"
+	{{.ImportRouter}}
+)
+
+func (s *Server) RegisterRoutes() http.Handler {
+	r := {{.Start}}
+
+	r.{{.Get}}("/", s.HelloWorldHandler)
+
+	r.{{.Get}}("/health", s.healthHandler)
+
+	{{call .ApiGroup  .Entity .Get .LowerEntity}}
+	return r
+}
+
+func (s *Server) HelloWorldHandler({{.FullContext}}) {
+	resp := make(map[string]string)
+	resp["message"] = "Hello World"
+
+	{{.ToTheClient}} resp)
+}
+
+func (s *Server) healthHandler({{.FullContext}}) {
+	{{.ToTheClient}} s.db.Health())
+}

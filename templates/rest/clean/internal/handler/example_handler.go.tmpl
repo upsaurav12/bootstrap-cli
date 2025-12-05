@@ -1,0 +1,19 @@
+package handler
+
+import (
+    {{.ImportHandler}}
+)
+
+type {{.Entity}} struct {
+    ID int `json:"id"`
+    Name string `json:"name"`
+}
+
+var {{.LowerEntity}}s =  []{{.Entity}}{
+    {ID: 1, Name: "Example 1"},
+	{ID: 2, Name: "Example 2"},
+}
+
+func Get{{.Entity}}s( {{.FullContext}} ) {
+	{{ .JSON }}{{.Response}}{{.LowerEntity}}s)
+}
