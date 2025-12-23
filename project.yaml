@@ -2,20 +2,9 @@ project:
   name: "test1"
   port: 8080
   arch: "clean"
+  router: "chi"        # or gin / echo / fiber
 
-
-entity:
+entities:
 - user
 - product
 - payments
-
-
-add_one:
-- db
-- auth
-- cache
-- queue
-- k8s
-
-
-
