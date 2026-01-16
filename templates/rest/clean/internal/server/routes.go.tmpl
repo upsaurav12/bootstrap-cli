@@ -16,20 +16,32 @@ func (s *Server) RegisterRoutes() {{.HTTPHandler}} {
 
 	gormDB := s.db.GetDB()
 
+
 	api := r.Group("/api/v1")
-	
-	{{range $i, $entity := .Entities}}
-		{{$upper := index $.UpperEntity $i}}
-		{{$lower := $entity}}
 
-	{{ printf "%sRepo := repository.New%sRepo(gormDB)" $lower $upper }}
-	{{ printf "%sService := service.New%sService(%sRepo)" $lower $upper $lower }}
-	{{ printf "%sHandler := handler.New%sHandler(%sService)" $lower $upper $lower }}
+	{{ if .Entities }}
+		{{ range $i, $entity := .Entities }}
+			{{ $upper := index $.UpperEntity $i }}
+			{{ $lower := $entity }}
 
-		{{call $.ApiGroup $upper $.Get $lower}}
-	{{end}}
+			{{ printf "%sRepo := repository.New%sRepo(gormDB)" $lower $upper }}
+			{{ printf "%sService := service.New%sService(%sRepo)" $lower $upper $lower }}
+			{{ printf "%sHandler := handler.New%sHandler(%sService)" $lower $upper $lower }}
 
+			{{ call $.ApiGroup $upper $.Get $lower }}
+		{{ end }}
+	{{ else }}
+		userRepo := repository.NewUserRepo(gormDB)
+		userService := service.NewUserService(userRepo)
+		userHandler := handler.NewUserHandler(userService)
 
+		{
+			user := api.Group("/user")
+			{
+				user.GET("", userHandler.GetUsers)
+			}
+		}
+	{{ end }}
 
 	return r
 }
