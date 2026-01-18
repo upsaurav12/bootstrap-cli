@@ -8,7 +8,7 @@ import "embed"
 // the paths 'common' and 'rest' correctly refer to the template folders.
 //
 
-//go:embed common/**
+//go:embed common
 //go:embed rest/**
 //go:embed db/**
 var FS embed.FS
