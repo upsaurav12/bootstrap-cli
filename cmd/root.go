@@ -1,5 +1,5 @@
 /*
-Copyright © 2025 Saurav Upadhyay sauravup041103@gmail.com
+Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 */
 package cmd
 
