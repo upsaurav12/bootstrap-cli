@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"bytes"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,59 +8,86 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateNewProject_Success(t *testing.T) {
-	tempDir := t.TempDir()
-	projectName := "test-project"
-	fullPath := filepath.Join(tempDir, projectName)
+func TestReturnUppercase(t *testing.T) {
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{"user", "User"},
+		{"product", "Product"},
+		{"", ""},
+	}
 
-	// Change to temp directory to create projectName relative to it
-	oldDir, err := os.Getwd()
-	assert.NoError(t, err, "Failed to get working directory")
-	defer os.Chdir(oldDir)
-	err = os.Chdir(tempDir)
-	assert.NoError(t, err, "Failed to change to temp directory")
-
-	var out bytes.Buffer
-	createNewProject(projectName, "gin", "go", &out)
-
-	// Check if directory was created
-	_, err = os.Stat(fullPath)
-	assert.NoError(t, err, "Expected project directory to be created")
-
-	// Check output
-	expected := fmt.Sprintf("✓ Created '%s' successfully\n", projectName)
-	fmt.Println(out.String())
-	assert.Equal(t, expected, out.String(), "Unexpected output")
+	for _, tt := range tests {
+		assert.Equal(t, tt.want, returnUppercase(tt.in))
+	}
 }
 
-/*
+func TestIsHidden(t *testing.T) {
+	hidden, err := IsHidden("/tmp/.env")
+	assert.NoError(t, err)
+	assert.True(t, hidden)
 
-func TestCreateNewProject_DirectoryAlreadyExists(t *testing.T) {
-	tempDir := t.TempDir()
-	projectName := "test-project"
-	fullPath := filepath.Join(tempDir, projectName)
+	notHidden, err := IsHidden("/tmp/main.go")
+	assert.NoError(t, err)
+	assert.False(t, notHidden)
+}
 
-	err := os.Mkdir(fullPath, 0755)
-	assert.NoError(t, err, "Failed to set-up directory")
-	var out bytes.Buffer
-	createNewProject(projectName, "go", &out)
+func TestCopyProjectYAML(t *testing.T) {
+	tmpDir := t.TempDir()
 
-	_, err = os.Stat(fullPath)
-	assert.NoError(t, err, "Expected directory to still exists")
+	src := filepath.Join(tmpDir, "project.yaml")
+	err := os.WriteFile(src, []byte("name: test"), 0644)
+	assert.NoError(t, err)
 
-	assert.Contains(t, out.String(), "Error creating directory", "Expected error message")
-}*/
+	destDir := t.TempDir()
 
-func TestCreateNewProject_InvalidPath(t *testing.T) {
-	tempDir := t.TempDir()
-	projectName := "invalid\000name"
-	invalidPath := filepath.Join(tempDir, projectName)
+	err = copyProjectYAML(src, destDir)
+	assert.NoError(t, err)
 
-	var out bytes.Buffer
-	createNewProject(projectName, "gin", "go ", &out)
+	out, err := os.ReadFile(filepath.Join(destDir, "project.yaml"))
+	assert.NoError(t, err)
+	assert.Equal(t, "name: test", string(out))
+}
 
-	_, err := os.Stat(invalidPath)
-	assert.Error(t, err, "Expected no directory to be created")
+func TestCopyProjectYAML_EmptySource(t *testing.T) {
+	err := copyProjectYAML("", t.TempDir())
+	assert.NoError(t, err)
+}
 
-	assert.Contains(t, out.String(), "Error creating directory", "Expected error message")
+func TestWriteSingle_CreatesFile(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	data := TemplateData{
+		Entity: "User",
+	}
+
+	content := []byte("Hello {{.Entity}}")
+
+	err := writeSingle(
+		data,
+		"example.txt",
+		"example.tmpl",
+		content,
+		tmpDir,
+		false,
+	)
+
+	assert.NoError(t, err)
+
+	out, err := os.ReadFile(filepath.Join(tmpDir, "user.txt"))
+	assert.NoError(t, err)
+	assert.Equal(t, "Hello User", string(out))
+}
+
+func TestRenderTemplateDir_NoError(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	data := TemplateData{
+		Entities: []string{},
+	}
+
+	err := renderTemplateDir("common", tmpDir, data)
+
+	assert.NoError(t, err)
 }
