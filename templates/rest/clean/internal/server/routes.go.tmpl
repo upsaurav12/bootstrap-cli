@@ -16,8 +16,9 @@ func (s *Server) RegisterRoutes() {{.HTTPHandler}} {
 
 	gormDB := s.db.GetDB()
 
-
+	{{- if .IsAPIGroup }}
 	api := r.Group("/api/v1")
+	{{- end }}
 
 	{{ if .Entities }}
 		{{ range $i, $entity := .Entities }}

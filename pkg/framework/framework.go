@@ -24,6 +24,7 @@ type FrameworkConfig struct {
 	ReturnKeyword string
 	HTTPHandler   string
 	Entities      []string
+	IsAPIGroup    bool
 }
 
 var FrameworkRegistory = map[string]FrameworkConfig{
@@ -38,6 +39,7 @@ var FrameworkRegistory = map[string]FrameworkConfig{
 		Start:        "gin.Default()",
 		OtherImports: `"net/http"`,
 		FullContext:  "c *gin.Context",
+		IsAPIGroup:   true,
 		ApiGroup: func(entity string, get string, lowerentity string) string {
 			apiGroup := fmt.Sprintf(`
 				{
@@ -80,18 +82,19 @@ var FrameworkRegistory = map[string]FrameworkConfig{
 			"github.com/go-chi/render"
 			"net/http"
 		`,
+		IsAPIGroup: false,
 		ApiGroup: func(entity string, get string, lowerentity string) string {
 			apiGroup := fmt.Sprintf(`
 				r.Group(func(r chi.Router) {
-					r.%s("/%s", handler.Get%ss)
+					r.%s("/%s", %sHandler.Get%ss)
 			})
-			`, get, lowerentity, entity)
+			`, get, lowerentity, lowerentity, entity)
 
 			return apiGroup
 		},
 		Get:         "Get",
 		FullContext: "w http.ResponseWriter, r *http.Request",
-		ToTheClient: "json.NewEncoder(w).Encode(",
+		ToTheClient: "render.JSON(w,r,",
 		Response:    "(w, r,",
 		ImportRouter: `
 			"encoding/json"
@@ -117,17 +120,16 @@ var FrameworkRegistory = map[string]FrameworkConfig{
 		Router:       "*echo.Echo",
 		Start:        "echo.New()",
 		OtherImports: `"net/http"`,
-
+		IsAPIGroup:   true,
 		ApiGroup: func(entity, get, lowerentity string) string {
 			return fmt.Sprintf(`
-            api := r.Group("/api/v1")
             {
                 %s := api.Group("/%s")
                 {
-                    %s.%s("", handler.Get%ss)
+                    %s.%s("", %sHandler.Get%ss)
                 }
             }
-        `, lowerentity, lowerentity, lowerentity, get, entity)
+        `, lowerentity, lowerentity, lowerentity, get, lowerentity, entity)
 		},
 
 		Get: "GET",
@@ -162,17 +164,17 @@ var FrameworkRegistory = map[string]FrameworkConfig{
 		Router:       "*fiber.App",
 		Start:        "fiber.New()",
 		OtherImports: `"net/http"`,
-
+		IsAPIGroup:   true,
 		ApiGroup: func(entity, get, lowerentity string) string {
 			return fmt.Sprintf(`
             api := r.Group("/api/v1")
             {
                 %s := api.Group("/%s")
                 {
-                    %s.%s("", handler.Get%ss)
+                    %s.%s("", %sHandler.Get%ss)
                 }
             }
-        `, lowerentity, lowerentity, lowerentity, get, entity)
+        `, lowerentity, lowerentity, lowerentity, get, lowerentity, entity)
 		},
 
 		Get: "Get",

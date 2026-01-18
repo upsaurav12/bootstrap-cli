@@ -2,9 +2,9 @@ project:
   name: "test1"
   port: 8080
   arch: "clean"
-  router: "chi"        # or gin / echo / fiber
+  router: "chi"
+  db: "postgres"
 
 entities:
 - user
 - product
-- payment
