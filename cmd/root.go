@@ -36,6 +36,7 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.Version = Version
 	rootCmd.SetVersionTemplate(
 		fmt.Sprintf(
 			"bootstrap-cli %s\nCommit: %s\nBuilt:  %s\n",
