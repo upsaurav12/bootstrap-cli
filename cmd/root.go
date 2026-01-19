@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
 )
@@ -38,13 +39,22 @@ func Execute() {
 	}
 }
 
+func resolvedVersion() string {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		if info.Main.Version != "(devel)" {
+			return info.Main.Version
+		}
+	}
+	return Version
+}
+
 func init() {
 	rootCmd.Flags().BoolP("version", "v", false, "print version information")
 
 	rootCmd.SetVersionTemplate(
 		fmt.Sprintf(
 			"bootstrap-cli %s\nCommit: %s\nBuilt:  %s\n",
-			Version,
+			resolvedVersion(),
 			Commit,
 			Date,
 		),
