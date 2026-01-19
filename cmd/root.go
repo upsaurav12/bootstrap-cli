@@ -19,12 +19,15 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "bootstrap",
 	Short: "Scaffold and manage production-ready Go services.",
-	Long: `BootstrapCLI is a project lifecycle tool for Go services,
+	Long: `BootstrapCLI is a project lifecycle tool for Go services.
 It helps you create, configure, and evolve Go projects using
-opinionated defaults, a clear project structure, and
-declarative configuration.`,
-	Version: Version,
+opinionated defaults and a clear project structure.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		v, _ := cmd.Flags().GetBool("version")
+		if v {
+			fmt.Print(cmd.VersionTemplate())
+			return
+		}
 		_ = cmd.Help()
 	},
 }
@@ -36,7 +39,8 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Version = Version
+	rootCmd.Flags().BoolP("version", "v", false, "print version information")
+
 	rootCmd.SetVersionTemplate(
 		fmt.Sprintf(
 			"bootstrap-cli %s\nCommit: %s\nBuilt:  %s\n",
