@@ -10,7 +10,15 @@ import (
 
 var applyCmd = cobra.Command{
 	Use:   "apply",
-	Short: "Apply project configuration from YAML",
+	Short: "Create or update a project from a YAML configuration.",
+	Long: `Apply a declarative project configuration defined in a YAML file.
+
+The YAML file acts as the source of truth for the project.
+BootstrapCLI will generate or update only tool-owned files
+based on this configuration.
+
+This command is safe to run multiple times and is intended
+for long-lived projects and team environments.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if yamlPath == "" {

@@ -68,8 +68,15 @@ func RunInteractiveWizard() (*ProjectInput, error) {
 // newCmd represents the new command
 var newCmd = &cobra.Command{
 	Use:   "new",
-	Short: "command for creating a new project.",
-	Long:  `command for creating a new project.`,
+	Short: "Create a new Go project using CLI flags.",
+	Long: `Create a new Go project with a predefined structure
+and production-oriented defaults.
+
+This command is intended for quick project initialization
+using CLI flags such as router, database, and port.
+
+For reproducible or team-based workflows, consider using
+the YAML-based 'apply' command instead.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		interactive, _ := cmd.Flags().GetBool("interactive")
 
