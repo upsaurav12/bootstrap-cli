@@ -142,6 +142,7 @@ type TemplateData struct {
 	OtherImports  string
 	UpperEntity   []string
 	ApiGroup      func(entity string, get string, lowerentity string) string
+	IsAPIGroup    bool
 	Get           string
 	FullContext   string
 	ToTheClient   string
@@ -215,6 +216,7 @@ func buildTemplateData(projectName string,
 		Returnable:    frameworkConfig.Returnable,
 		ReturnKeyword: frameworkConfig.ReturnKeyword,
 		HTTPHandler:   frameworkConfig.HTTPHandler,
+		IsAPIGroup:    frameworkConfig.IsAPIGroup,
 		Entities:      Entities,
 		// UpperEntity: ,
 	}
@@ -246,6 +248,7 @@ func buildTemplateData(projectName string,
 			ReturnKeyword: frameworkConfig.ReturnKeyword,
 			HTTPHandler:   frameworkConfig.HTTPHandler,
 			Entities:      yamlConfig.Entities,
+			IsAPIGroup:    frameworkConfig.IsAPIGroup,
 		}
 	}
 
