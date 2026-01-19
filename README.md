@@ -3,6 +3,8 @@
 **BootstrapCLI** is a CLI tool that scaffolds production-ready Golang projects — no dependency headaches, no manual setup.  
 Just run a command and get a fully configured project with linters, routers, and structure ready to code.
 
+> Note: This is my first OSS project, I want to make a CLI tool(maybe webUI) which is not just generator tool which only generate go code, but it will help developers to follow best practices, and assist during the project development. In future versions of the project i will add AI which will help developer to assist during their development and help in debugging + fixing error. I am adding AI not to generate code in there project but for assisting purpose only.
+
 * * *
 ##  Installation
 
@@ -107,9 +109,6 @@ Create a new project using yaml file configurations
 **BootstrapCLI** automates all that.  
 You focus on business logic — it handles the rest.
 
-> Note: This is my first OSS project, I want to make a CLI tool(maybe webUI) which is not just generator tool which only generate
-> go code, but it will help developers to follow best practices, and assist during the project development. In future versions of the project i will add AI which will help developer to assist during their development and help in debugging + fixing error. I am adding AI not to generate code in there project but for assisting purpose only.
-
 * * *
 
 ##  Roadmap
@@ -123,15 +122,34 @@ You focus on business logic — it handles the rest.
 
 ## Contributing
 
-Contributions, feedback, and ideas are welcome!  
-Feel free to open an issue or PR on [GitHub](https://github.com/upsaurav12/bootstrap).
+Contributions, feedback, and ideas are welcome.
 
-Hope you like this project.
+If you would like to contribute:
+
+- Open an issue to report bugs or suggest features
+
+- Submit a pull request with clear context and rationale
+
+Please ensure that:
+
+- Code changes are well-structured and documented
+
+- New features include appropriate tests where applicable
+
+- Existing functionality is not broken
+
+You can get started by visiting the project repository on GitHub:
+https://github.com/upsaurav12/bootstrap
+
+If you find this project useful, consider giving it a star ⭐ — it helps with visibility and continued development.
 
 * * *
 
 ##  License
 
-Licensed under the **MIT License** © 2026 [Saurav Upadhyay](https://github.com/upsaurav12)
+This project is licensed under the MIT License.
 
+© 2026 [Saurav Upadhyay](https://github.com/upsaurav12)
+
+See the LICENSE file for full license details.
 * * *
