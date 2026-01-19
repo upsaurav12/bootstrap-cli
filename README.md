@@ -18,20 +18,32 @@ Once installed, confirm the installation:
 
 ## Quick Start 💨
 
+#### 1. Create a New Project
+
 ```
 bootstrap new myapp --type=rest --router=gin --port=8080 --db=postgres
 ```
+- This command scaffolds a production-ready Go project with:
+- Standard project structure
+- Database configuration
+- Router setup
+- Makefile and tooling
+
+#### 2. Prepare the Project
 
 ```
 cd myapp && make tidy
 ```
 
-Make sure that the docker and docker compose is installed in your local machine
+#### 3. Start Required Services (Database)
 ```
 docker compose up -d
 ```
 
 Before running ``make run`` make sure that you have running 'db' in docker, running with the same credentials as in .env file.
+
+#### 4. Run the Application
+
 ```
 make run
 ```
